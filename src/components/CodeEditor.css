@@ -1,0 +1,94 @@
+.code-editor {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* LINE NUMBERS */
+.line-nums {
+  width: 48px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 14px 0;
+  overflow: hidden;
+  user-select: none;
+}
+
+.ln {
+  height: 21px;
+  line-height: 21px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text4);
+  text-align: right;
+  padding-right: 10px;
+  transition: color 0.1s;
+}
+
+.ln-err {
+  color: var(--red);
+  background: rgba(168,92,92,0.08);
+  border-left: 2px solid var(--red);
+}
+
+/* EDITOR WRAP */
+.editor-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* HIGHLIGHT LAYER */
+.hl-layer {
+  position: absolute;
+  inset: 0;
+  padding: 14px 14px 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 21px;
+  white-space: pre;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+  color: var(--text);
+  tab-size: 2;
+}
+
+/* EDITABLE TEXTAREA */
+.editor-ta {
+  position: absolute;
+  inset: 0;
+  padding: 14px 14px 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 21px;
+  white-space: pre;
+  overflow: auto;
+  tab-size: 2;
+  z-index: 2;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--accent);
+  border: none;
+  outline: none;
+}
+
+.editor-ta::placeholder {
+  color: var(--text4);
+  font-style: italic;
+}
+
+/* SYNTAX TOKEN COLORS — applied inside .hl-layer */
+.hl-layer .syn-key    { color: var(--syn-key);  }
+.hl-layer .syn-str    { color: var(--syn-str);  }
+.hl-layer .syn-num    { color: var(--syn-num);  }
+.hl-layer .syn-bool   { color: var(--syn-bool); }
+.hl-layer .syn-null   { color: var(--syn-null); }
+.hl-layer .syn-punct  { color: var(--stone-500); }
+.hl-layer .syn-tag    { color: var(--syn-tag);  }
+.hl-layer .syn-attr   { color: var(--syn-attr); }
+.hl-layer .syn-comment{ color: var(--text3); font-style: italic; }
+.hl-layer .syn-selector { color: var(--syn-bool); }
+.hl-layer .syn-fn     { color: var(--syn-tag);  }
