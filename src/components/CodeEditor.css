@@ -92,3 +92,37 @@
 .hl-layer .syn-comment{ color: var(--text3); font-style: italic; }
 .hl-layer .syn-selector { color: var(--syn-bool); }
 .hl-layer .syn-fn     { color: var(--syn-tag);  }
+
+/* ERROR OVERLAYS */
+.error-overlays {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.error-overlay-line {
+  position: absolute;
+  left: 0; right: 0;
+  height: 21px;
+  background: rgba(168, 92, 92, 0.10);
+  border-left: 2px solid rgba(168, 92, 92, 0.6);
+  pointer-events: none;
+}
+
+/* LINE FLASH ANIMATION */
+.ln-flash {
+  background: var(--accent) !important;
+  color: var(--stone-950) !important;
+  animation: lnpulse 1.2s ease;
+}
+@keyframes lnpulse {
+  0%   { background: var(--accent); color: var(--stone-950); }
+  60%  { background: var(--accent); color: var(--stone-950); }
+  100% { background: transparent;   color: var(--text3); }
+}
+
+/* ERROR LINE NUMBER */
+.ln-err {
+  color: var(--red) !important;
+  font-size: 10px;
+}
