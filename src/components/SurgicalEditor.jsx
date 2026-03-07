@@ -24,30 +24,42 @@ async function callAI(prompt, maxTokens = 1500) {
 }
 
 // ── SMART FILE SAMPLER ───────────────────────────────────────────────────────
-// For large files: extract structural skeleton without sending full content
 function buildFileSkeleton(code, mode) {
   const lines = code.split('\n');
   const skeleton = [];
+  const isJSX = mode === 'js' || mode === 'jsx';
+  const isCSS = mode === 'css';
 
   lines.forEach((line, i) => {
     const ln = i + 1;
     const trimmed = line.trim();
+    if (!trimmed || trimmed.length < 3) return;
     const isStructural =
-      // CSS: selectors, variables, @rules
-      (mode === 'css' && (trimmed.startsWith(':root') || trimmed.startsWith('@') || (trimmed.includes('{') && !trimmed.startsWith('//')) || trimmed.startsWith('--'))) ||
-      // JS/JSX: functions, components, imports, exports, hooks, classes
-      ((mode === 'js' || mode === 'jsx') && (trimmed.startsWith('import ') || trimmed.startsWith('export ') || trimmed.startsWith('function ') || trimmed.startsWith('const ') || trimmed.startsWith('class ') || trimmed.startsWith('async ') || trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('useEffect') || trimmed.startsWith('useState'))) ||
-      // HTML: tags, comments
-      (mode === 'html' && (trimmed.startsWith('<') || trimmed.startsWith('<!--'))) ||
-      // JSON: top-level keys
-      (mode === 'json' && (trimmed.startsWith('"') || trimmed.startsWith('{') || trimmed.startsWith('[')));
-
-    if (isStructural || ln % MAP_SAMPLE_EVERY === 0) {
-      skeleton.push(`L${ln}: ${line.slice(0, 120)}`);
+      (isJSX && (
+        trimmed.startsWith('import ') ||
+        trimmed.startsWith('export default') ||
+        trimmed.startsWith('export function') ||
+        trimmed.startsWith('export const') ||
+        (trimmed.startsWith('function ') && trimmed.includes('(')) ||
+        (trimmed.startsWith('const ') && (trimmed.includes(' = (') || trimmed.includes('= async') || trimmed.includes('= function'))) ||
+        (trimmed.startsWith('//') && trimmed.length < 80)
+      )) ||
+      (isCSS && (
+        (trimmed.endsWith('{') && !trimmed.startsWith('//')) ||
+        trimmed.startsWith('--') ||
+        trimmed.startsWith('@media') ||
+        trimmed.startsWith('@keyframes')
+      )) ||
+      (mode === 'html' && /^<[a-zA-Z]/.test(trimmed)) ||
+      (mode === 'json' && /^"[\w]+"/.test(trimmed));
+    if (isStructural) {
+      skeleton.push(`L${ln}: ${line.slice(0, 90)}`);
     }
   });
-
-  return skeleton.join('\n');
+  const capped = skeleton.length > 200
+    ? [...skeleton.slice(0, 80), ...skeleton.slice(Math.floor(skeleton.length/2)-20, Math.floor(skeleton.length/2)+20), ...skeleton.slice(-80)]
+    : skeleton;
+  return capped.join('\n').slice(0, 7000);
 }
 
 // ── EXTRACT CHUNK ─────────────────────────────────────────────────────────────
@@ -67,9 +79,29 @@ function stitchPatch(before, patched, after) {
 
 // ── PARSE JSON SAFE ──────────────────────────────────────────────────────────
 function parseJSON(str) {
-  const clean = str.trim()
-    .replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
-  return JSON.parse(clean);
+  let clean = str.trim()
+    .replace(/^```json\s*/m,'').replace(/^```\s*/m,'').replace(/\s*```$/m,'').trim();
+  const start = clean.indexOf('[');
+  const end   = clean.lastIndexOf(']');
+  if (start !== -1 && end > start) clean = clean.slice(start, end + 1);
+  try { return JSON.parse(clean); } catch {}
+  const fixed = clean.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+  try { return JSON.parse(fixed); } catch {}
+  // Last resort: extract complete objects
+  const objects = [];
+  let depth = 0, objStart = -1;
+  for (let i = 0; i < fixed.length; i++) {
+    if (fixed[i] === '{') { if (depth === 0) objStart = i; depth++; }
+    else if (fixed[i] === '}') {
+      depth--;
+      if (depth === 0 && objStart !== -1) {
+        try { objects.push(JSON.parse(fixed.slice(objStart, i + 1))); } catch {}
+        objStart = -1;
+      }
+    }
+  }
+  if (objects.length > 0) return objects;
+  throw new Error('Could not parse AI response as JSON');
 }
 
 // ── MAIN COMPONENT ───────────────────────────────────────────────────────────
@@ -110,7 +142,7 @@ export default function SurgicalEditor({ code, mode, onApplyPatch, onJumpToLine 
 
 ${isLarge ? 'File skeleton (structural lines extracted):' : 'Full file:'}
 \`\`\`
-${skeleton.slice(0, 30000)}
+${skeleton.slice(0, 7000)}
 \`\`\`
 
 Return a JSON array of code sections. Each section:
