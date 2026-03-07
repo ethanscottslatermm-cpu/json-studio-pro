@@ -19,12 +19,16 @@ exports.handler = async (event) => {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'messages-2023-12-15',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        model: 'claude-opus-4-5',
+        max_tokens: body.max_tokens || 1500,
+        messages: body.messages,
+      }),
     });
 
     const data = await response.json();
+    console.log('Anthropic response:', JSON.stringify(data));
 
     return {
       statusCode: 200,
@@ -35,6 +39,7 @@ exports.handler = async (event) => {
       body: JSON.stringify(data),
     };
   } catch (err) {
+    console.error('Function error:', err.message);
     return {
       statusCode: 500,
       headers: { 'Access-Control-Allow-Origin': '*' },
