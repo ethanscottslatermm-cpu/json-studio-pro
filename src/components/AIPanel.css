@@ -404,3 +404,16 @@
 .ft-array  { background: rgba(143,180,204,0.1);  color: var(--syn-key); }
 .ft-object { background: rgba(184,160,96,0.1);   color: var(--yellow); }
 .fields-footer { padding: 6px 0 2px; border-top: 1px solid var(--border); margin-top: 4px; }
+
+/* ERROR JUMP */
+.err-jump {
+  font-family: var(--font-cond);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  opacity: 0.6;
+  margin-left: 6px;
+}
+.error-card:hover .err-jump { opacity: 1; }
+.error-card:hover { border-color: var(--accent2) !important; }
