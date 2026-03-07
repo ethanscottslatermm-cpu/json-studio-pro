@@ -4,6 +4,7 @@ import CodeEditor      from './components/CodeEditor';
 import AIPanel         from './components/AIPanel';
 import StatusBar       from './components/StatusBar';
 import ProjectAnalyzer from './components/ProjectAnalyzer';
+import SectionMap      from './components/SectionMap';
 import { useAI } from './hooks/useAI';
 import { parseJSONError, flattenFields } from './lib/utils';
 import { saveSession } from './lib/supabase';
@@ -60,8 +61,15 @@ export default function App() {
   const [mode, setModeRaw] = useState('json');
   const [view, setView]   = useState('code'); // code | preview
   const [toast, setToast] = useState(null);
+  const [rightPanel, setRightPanel] = useState('ai'); // ai | sections
   const { call, busy }    = useAI();
   const toastTimer        = useRef(null);
+  const editorRef         = useRef(null);
+
+  const handleJumpToLine = (line) => {
+    setView('code');
+    setTimeout(() => editorRef.current?.jumpToLine(line), 50);
+  };
 
   // ── DERIVED STATE ──────────────────────────────────────────────────────────
   const errors = (() => {
@@ -216,6 +224,7 @@ export default function App() {
             {/* CODE EDITOR */}
             {view === 'code' && (
               <CodeEditor
+                ref={editorRef}
                 code={code}
                 onChange={setCode}
                 mode={mode}
@@ -251,14 +260,30 @@ export default function App() {
         )}
       </div>
 
-        {/* AI PANEL */}
-        <AIPanel
-          code={code}
-          mode={mode}
-          onApplyCode={handleApplyCode}
-          errors={errors}
-          fields={fields}
-        />
+        {/* RIGHT PANEL */}
+        <div className="right-panel-wrap">
+          <div className="right-panel-tabs">
+            <button className={"rp-tab " + (rightPanel==="ai"?"on":"")} onClick={()=>setRightPanel("ai")}>✦ AI Chat</button>
+            <button className={"rp-tab " + (rightPanel==="sections"?"on":"")} onClick={()=>setRightPanel("sections")}>⬡ Sections</button>
+          </div>
+          {rightPanel === "ai" ? (
+            <AIPanel
+              code={code}
+              mode={mode}
+              onApplyCode={handleApplyCode}
+              errors={errors}
+              fields={fields}
+              onJumpToLine={handleJumpToLine}
+            />
+          ) : (
+            <SectionMap
+              code={code}
+              mode={mode}
+              onJumpToLine={handleJumpToLine}
+              onApplyPatch={(patched) => { handleApplyCode(patched); }}
+            />
+          )}
+        </div>
       </div>
 
       <StatusBar
