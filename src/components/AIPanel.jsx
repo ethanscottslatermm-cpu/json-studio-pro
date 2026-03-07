@@ -21,7 +21,7 @@ const SCAN_TYPES = [
   { id: 'code',    label: '◻ Code Screenshot',    cls: 'ghost' },
 ];
 
-export default function AIPanel({ code, mode, onApplyCode, errors, fields }) {
+export default function AIPanel({ code, mode, onApplyCode, errors, fields, onJumpToLine }) {
   const [tab, setTab] = useState('chat');
   const [messages, setMessages] = useState([{
     role: 'ai',
@@ -274,8 +274,8 @@ Be concise and technical. Wrap code in triple-backtick blocks with language tags
             </div>
           ) : (
             errors.map((e, i) => (
-              <div key={i} className="error-card">
-                <div className="err-title">⚠ Line {e.line}, Col {e.col}</div>
+              <div key={i} className="error-card" onClick={() => onJumpToLine?.(e.line)} style={{cursor:'pointer'}} title="Click to jump to error">
+                <div className="err-title">⚠ Line {e.line}, Col {e.col} <span className="err-jump">→ jump</span></div>
                 <div className="err-msg">{e.msg}</div>
               </div>
             ))
