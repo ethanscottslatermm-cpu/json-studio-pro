@@ -1,10 +1,4 @@
 exports.handler = async (event) => {
-  // Only allow POST
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
-  }
-
-  // CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
@@ -25,6 +19,7 @@ exports.handler = async (event) => {
         'Content-Type': 'application/json',
         'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'messages-2023-12-15',
       },
       body: JSON.stringify(body),
     });
@@ -32,7 +27,7 @@ exports.handler = async (event) => {
     const data = await response.json();
 
     return {
-      statusCode: response.status,
+      statusCode: 200,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json',
@@ -42,6 +37,7 @@ exports.handler = async (event) => {
   } catch (err) {
     return {
       statusCode: 500,
+      headers: { 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify({ error: err.message }),
     };
   }
