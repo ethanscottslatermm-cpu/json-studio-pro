@@ -5,6 +5,7 @@ import AIPanel         from './components/AIPanel';
 import StatusBar       from './components/StatusBar';
 import ProjectAnalyzer from './components/ProjectAnalyzer';
 import SectionMap      from './components/SectionMap';
+import SurgicalEditor  from './components/SurgicalEditor';
 import { useAI } from './hooks/useAI';
 import { parseJSONError, flattenFields } from './lib/utils';
 import { saveSession } from './lib/supabase';
@@ -265,6 +266,7 @@ export default function App() {
           <div className="right-panel-tabs">
             <button className={"rp-tab " + (rightPanel==="ai"?"on":"")} onClick={()=>setRightPanel("ai")}>✦ AI Chat</button>
             <button className={"rp-tab " + (rightPanel==="sections"?"on":"")} onClick={()=>setRightPanel("sections")}>⬡ Sections</button>
+            <button className={"rp-tab " + (rightPanel==="surgical"?"on":"")} onClick={()=>setRightPanel("surgical")}>⚡ Surgical</button>
           </div>
           {rightPanel === "ai" ? (
             <AIPanel
@@ -275,8 +277,15 @@ export default function App() {
               fields={fields}
               onJumpToLine={handleJumpToLine}
             />
-          ) : (
+          ) : rightPanel === "sections" ? (
             <SectionMap
+              code={code}
+              mode={mode}
+              onJumpToLine={handleJumpToLine}
+              onApplyPatch={(patched) => { handleApplyCode(patched); }}
+            />
+          ) : (
+            <SurgicalEditor
               code={code}
               mode={mode}
               onJumpToLine={handleJumpToLine}
