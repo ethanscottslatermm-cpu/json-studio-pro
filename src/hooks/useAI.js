@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-const API_URL = process.env.REACT_APP_AI_ENDPOINT || '/.netlify/functions/ai';
+const API_URL = '/.netlify/functions/ai';
 
 export function useAI() {
   const [busy, setBusy] = useState(false);
@@ -11,8 +11,15 @@ export function useAI() {
       let content;
       if (image) {
         content = [
-          { type: 'image', source: { type: 'base64', media_type: image.mediaType, data: image.base64 } },
-          { type: 'text', text: prompt }
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: image.mediaType,
+              data: image.base64,
+            },
+          },
+          { type: 'text', text: prompt },
         ];
       } else {
         content = prompt;
@@ -22,15 +29,24 @@ export function useAI() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-5',
           max_tokens: maxTokens,
-          messages: [{ role: 'user', content }]
-        })
+          messages: [{ role: 'user', content }],
+        }),
       });
 
-      if (!res.ok) throw new Error(`API error ${res.status}`);
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || `API error ${res.status}`);
+      }
+
       const data = await res.json();
-      return (data.content || []).map(b => b.text || '').join('');
+
+      if (data.error) throw new Error(data.error.message || 'API error');
+
+      const text = (data.content || []).map(b => b.text || '').join('');
+      if (!text) throw new Error('Empty response from AI');
+
+      return text;
     } catch (err) {
       throw err;
     } finally {
