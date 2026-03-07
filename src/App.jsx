@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useRef } from 'react';
-import Header    from './components/Header';
-import CodeEditor from './components/CodeEditor';
-import AIPanel   from './components/AIPanel';
-import StatusBar  from './components/StatusBar';
+import Header          from './components/Header';
+import CodeEditor      from './components/CodeEditor';
+import AIPanel         from './components/AIPanel';
+import StatusBar       from './components/StatusBar';
+import ProjectAnalyzer from './components/ProjectAnalyzer';
 import { useAI } from './hooks/useAI';
 import { parseJSONError, flattenFields } from './lib/utils';
 import { saveSession } from './lib/supabase';
@@ -195,53 +196,60 @@ export default function App() {
           <SbBtn title="Clear"       icon="🗑️" onClick={() => { setCode(''); showToast('Cleared'); }} />
         </div>
 
-        {/* MAIN AREA */}
-        <div className="main-area">
-          {/* EDITOR TAB BAR */}
-          <div className="tab-bar">
-            <div className="tab active">
-              {mode === 'json' ? '{ }' : mode === 'html' ? '◈' : mode === 'css' ? '◉' : '⌬'}
-              &nbsp;
-              {view === 'preview' ? 'preview' : { json:'untitled.json', html:'index.html', css:'styles.css', js:'script.js' }[mode]}
-            </div>
-            <div style={{ flex: 1 }} />
-          </div>
-
-          {/* CODE EDITOR */}
-          {view === 'code' && (
-            <CodeEditor
-              code={code}
-              onChange={setCode}
-              mode={mode}
-              errors={errors}
-            />
-          )}
-
-          {/* PREVIEW */}
-          {view === 'preview' && (
-            <div className="preview-wrap">
-              <div className="preview-chrome">
-                <div className="chrome-dots">
-                  <span style={{background:'#ff5f57'}} />
-                  <span style={{background:'#febc2e'}} />
-                  <span style={{background:'#28c840'}} />
-                </div>
-                <span className="chrome-url">preview.{mode}</span>
-                <button className="chrome-btn" onClick={() => {
-                  const w = window.open('','_blank');
-                  w.document.write(previewSrc);
-                  w.document.close();
-                }}>⤢</button>
+      {/* MAIN AREA */}
+      <div className="main-area">
+        {/* PROJECT ANALYZER MODE */}
+        {mode === 'project' ? (
+          <ProjectAnalyzer />
+        ) : (
+          <>
+            {/* EDITOR TAB BAR */}
+            <div className="tab-bar">
+              <div className="tab active">
+                {mode === 'json' ? '{ }' : mode === 'html' ? '◈' : mode === 'css' ? '◉' : '⌬'}
+                &nbsp;
+                {view === 'preview' ? 'preview' : { json:'untitled.json', html:'index.html', css:'styles.css', js:'script.js' }[mode]}
               </div>
-              <iframe
-                className="preview-frame"
-                srcDoc={previewSrc}
-                title="preview"
-                sandbox="allow-scripts"
-              />
+              <div style={{ flex: 1 }} />
             </div>
-          )}
-        </div>
+
+            {/* CODE EDITOR */}
+            {view === 'code' && (
+              <CodeEditor
+                code={code}
+                onChange={setCode}
+                mode={mode}
+                errors={errors}
+              />
+            )}
+
+            {/* PREVIEW */}
+            {view === 'preview' && (
+              <div className="preview-wrap">
+                <div className="preview-chrome">
+                  <div className="chrome-dots">
+                    <span style={{background:'#ff5f57'}} />
+                    <span style={{background:'#febc2e'}} />
+                    <span style={{background:'#28c840'}} />
+                  </div>
+                  <span className="chrome-url">preview.{mode}</span>
+                  <button className="chrome-btn" onClick={() => {
+                    const w = window.open('','_blank');
+                    w.document.write(previewSrc);
+                    w.document.close();
+                  }}>⤢</button>
+                </div>
+                <iframe
+                  className="preview-frame"
+                  srcDoc={previewSrc}
+                  title="preview"
+                  sandbox="allow-scripts"
+                />
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
         {/* AI PANEL */}
         <AIPanel
