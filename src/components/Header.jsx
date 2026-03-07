@@ -9,10 +9,11 @@ import './Header.css';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const MODES = [
-  { id: 'json', label: '{ } JSON' },
-  { id: 'html', label: '◈ HTML'  },
-  { id: 'css',  label: '◉ CSS'   },
-  { id: 'js',   label: '⌬ JS'    },
+  { id: 'json',    label: '{ } JSON'    },
+  { id: 'html',    label: '◈ HTML'      },
+  { id: 'css',     label: '◉ CSS'       },
+  { id: 'js',      label: '⌬ JS'        },
+  { id: 'project', label: '⬡ Project'   },
 ];
 
 export default function Header({ mode, setMode, status, onFormat, onFix, onGenerate, onPreview }) {
