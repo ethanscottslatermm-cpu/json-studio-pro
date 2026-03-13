@@ -1,10 +1,14 @@
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
 exports.handler = async (event) => {
+  // Handle CORS preflight requests
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
       },
       body: '',
     };
@@ -12,23 +16,28 @@ exports.handler = async (event) => {
 
   try {
     const body = JSON.parse(event.body);
+    
+    // Initialize Gemini using your existing Netlify Environment Variable
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5',
-        max_tokens: body.max_tokens || 1500,
-        messages: body.messages,
-      }),
-    });
+    // Extract the latest message from the app's request
+    const userPrompt = body.messages[body.messages.length - 1].content;
 
-    const data = await response.json();
-    console.log('Anthropic response:', JSON.stringify(data));
+    // Generate response using Gemini
+    const result = await model.generateContent(userPrompt);
+    const responseText = result.response.text();
+
+    // Map the response back to the format your App expects
+    const formattedData = {
+      content: [
+        {
+          text: responseText
+        }
+      ]
+    };
+
+    console.log('Gemini response generated successfully');
 
     return {
       statusCode: 200,
@@ -36,13 +45,16 @@ exports.handler = async (event) => {
         'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(formattedData),
     };
   } catch (err) {
-    console.error('Function error:', err.message);
+    console.error('Gemini Function error:', err.message);
     return {
       statusCode: 500,
-      headers: { 'Access-Control-Allow-Origin': '*' },
+      headers: { 
+        'Access-Control-Allow-Origin': '*',
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ error: err.message }),
     };
   }
